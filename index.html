@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sorteo Simple</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #eaeaea;
+    }
+    #numero {
+      font-size: 60px;
+      margin: 20px;
+      color: #333;
+    }
+    #mensaje {
+      font-size: 30px;
+      margin-top: 20px;
+    }
+    button {
+      font-size: 24px;
+      padding: 10px 30px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>¡Sorteo!</h1>
+  <p>Haz clic en el botón para participar</p>
+  <div id="numero">---</div>
+  <button id="boton">Participar</button>
+  <div id="mensaje"></div>
+
+  <script>
+    const numeroGanador = 777; // Número ganador
+    const boton = document.getElementById('boton');
+    const numeroDiv = document.getElementById('numero');
+    const mensajeDiv = document.getElementById('mensaje');
+
+    boton.addEventListener('click', () => {
+      boton.disabled = true; // Desactiva el botón después de participar
+      let contador = 0;
+
+      const intervalo = setInterval(() => {
+        const num = Math.floor(Math.random() * 900 + 100); // número aleatorio entre 100 y 999
+        numeroDiv.textContent = num;
+        contador++;
+
+        if (contador >= 20) {
+          clearInterval(intervalo);
+
+          if (parseInt(numeroDiv.textContent) === numeroGanador) {
+            mensajeDiv.textContent = '¡Ganaste!';
+            mensajeDiv.style.color = 'green';
+          } else {
+            mensajeDiv.textContent = 'No ganaste, intenta otra vez más tarde.';
+            mensajeDiv.style.color = 'red';
+          }
+        }
+      }, 100); // velocidad del cambio de número
+    });
+  </script>
+</body>
+</html>
