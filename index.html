@@ -1,66 +1,230 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sorteo Simple</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
+      background: #ffffff;
       text-align: center;
-      padding: 50px;
-      background-color: #eaeaea;
+      padding: 20px;
     }
-    #numero {
-      font-size: 60px;
-      margin: 20px;
-      color: #333;
+    h1 {
+      margin-top: 10px;
+      margin-bottom: 5px;
     }
-    #mensaje {
-      font-size: 30px;
-      margin-top: 20px;
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
     }
     button {
-      font-size: 24px;
-      padding: 10px 30px;
-      cursor: pointer;
+      background: #ff66b2;
+      color: white;
+      border: none;
+    }
+    button:disabled {
+      background: #ccc;
+    }
+    #resultado {
+      margin-top: 20px;
+      font-size: 18px;
+      max-width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #numeroMostrado {
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #logo {
+      width: 250px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>¡Sorteo!</h1>
-  <p>Haz clic en el botón para participar</p>
-  <div id="numero">---</div>
-  <button id="boton">Participar</button>
-  <div id="mensaje"></div>
+
+  <img id="logo" src="https://d22fxaf9t8d39k.cloudfront.net/bed9379ebf49a3f3ae7d1956b117514e510f69aaad765f6dffd579bac6b1253d22455.gif" alt="Logo Sorteo"/>
+
+  <div id="inicio">
+    <h1>¡Bienvenid@! 😊</h1>
+    <p id="contadorJugadores">0 personas ya participaron 👥</p>
+    <input type="text" id="nombre" placeholder="Tu nombre" required>
+    <p>Podés participar aleatoriamente hasta 2 veces y 1 vez con un número manualmente 🌟</p>
+    <button onclick="comenzar()">Comenzar</button>
+  </div>
+
+  <div id="juego" style="display:none">
+    <h1>¡Probá tu suerte! 🍀</h1>
+    <button onclick="jugarAleatorio()" id="btnAleatorio">Aleatorio 🎲</button>
+    <input type="number" id="numeroManual" placeholder="1-100">
+    <button onclick="jugarManual()" id="btnManual">Manual ✍️</button>
+    <div id="numeroMostrado"></div>
+    <div id="resultado"></div>
+    <p id="contadorOportunidades">Te quedan <span id="oportunidadesRestantes">3</span> oportunidades</p>
+  </div>
 
   <script>
-    const numeroGanador = 777; // Número ganador
-    const boton = document.getElementById('boton');
-    const numeroDiv = document.getElementById('numero');
-    const mensajeDiv = document.getElementById('mensaje');
+    let nombre = "";
+    let ganador = 77;
+    let intentosAleatorios = 0;
+    let maxIntentos = 2;
+    let maxIntentosManual = 1;
+    let oportunidadesRestantes = 3;
 
-    boton.addEventListener('click', () => {
-      boton.disabled = true; // Desactiva el botón después de participar
-      let contador = 0;
+    let jugadoresPrevios = localStorage.getItem("jugadoresPrevios") || 0;
+    document.getElementById("contadorJugadores").innerText = `${jugadoresPrevios} personas ya participaron 👥`;
 
-      const intervalo = setInterval(() => {
-        const num = Math.floor(Math.random() * 900 + 100); // número aleatorio entre 100 y 999
-        numeroDiv.textContent = num;
-        contador++;
+    function comenzar() {
+      nombre = document.getElementById("nombre").value.trim();
+      if (!nombre) {
+        alert("Ingresá tu nombre");
+        return;
+      }
+      document.getElementById("inicio").style.display = "none";
+      document.getElementById("juego").style.display = "block";
+    }
 
-        if (contador >= 20) {
-          clearInterval(intervalo);
+    function mostrarResultado(msj) {
+      const resultado = document.getElementById("resultado");
+      resultado.innerText = msj;
+    }
 
-          if (parseInt(numeroDiv.textContent) === numeroGanador) {
-            mensajeDiv.textContent = '¡Ganaste!';
-            mensajeDiv.style.color = 'green';
+    function actualizarOportunidades() {
+      document.getElementById("oportunidadesRestantes").innerText = oportunidadesRestantes;
+    }
+
+    function verificarFinJuego() {
+      if (oportunidadesRestantes <= 0) {
+        document.getElementById("btnAleatorio").disabled = true;
+        document.getElementById("btnManual").disabled = true;
+        document.getElementById("contadorOportunidades").style.display = "none";
+        mostrarResultado("No ganaste, gracias por participar. ¡Hasta la próxima! 😊");
+      }
+    }
+
+    function jugarAleatorio() {
+      if (intentosAleatorios >= maxIntentos || oportunidadesRestantes <= 0) {
+        return;
+      }
+
+      const numeroMostradoEl = document.getElementById("numeroMostrado");
+      const resultadoEl = document.getElementById("resultado");
+      resultadoEl.innerText = "";
+      numeroMostradoEl.innerText = "...";
+
+      let intervalCount = 0;
+      const interval = setInterval(() => {
+        const num = Math.floor(Math.random() * 100) + 1;
+        numeroMostradoEl.innerText = num;
+        intervalCount++;
+        if (intervalCount >= 30) {
+          clearInterval(interval);
+          const finalNum = Math.floor(Math.random() * 100) + 1;
+          numeroMostradoEl.innerText = finalNum;
+
+          if (finalNum === ganador) {
+            mostrarResultado(`¡Ganaste ${nombre}! Enviá captura por Instagram 🚀`);
+            lanzarConfeti();
+            document.getElementById("btnAleatorio").disabled = true;
+            document.getElementById("btnManual").disabled = true;
+            document.getElementById("contadorOportunidades").style.display = "none";
           } else {
-            mensajeDiv.textContent = 'No ganaste, intenta otra vez más tarde.';
-            mensajeDiv.style.color = 'red';
+            oportunidadesRestantes--;
+            intentosAleatorios++;
+            actualizarOportunidades();
+            if (oportunidadesRestantes > 0) {
+              mostrarResultado(`No ganaste ${nombre}, seguí participando 😢`);
+            }
+            verificarFinJuego();
+          }
+
+          jugadoresPrevios++;
+          localStorage.setItem("jugadoresPrevios", jugadoresPrevios);
+          document.getElementById("contadorJugadores").innerText = `${jugadoresPrevios} personas ya participaron 👥`;
+
+          // Desactivar el botón de aleatorio después del segundo intento
+          if (intentosAleatorios >= maxIntentos) {
+            document.getElementById("btnAleatorio").disabled = true;
           }
         }
-      }, 100); // velocidad del cambio de número
-    });
+      }, 100);
+    }
+
+    function jugarManual() {
+      if (maxIntentosManual <= 0 || oportunidadesRestantes <= 0) return;
+
+      const num = parseInt(document.getElementById("numeroManual").value);
+      if (!num || num < 1 || num > 100) {
+        alert("Ingresá un número entre 1 y 100");
+        return;
+      }
+
+      document.getElementById("btnManual").disabled = true;
+      document.getElementById("resultado").innerText = "Verificando... ⏳";
+      document.getElementById("numeroMostrado").innerText = "";
+
+      setTimeout(() => {
+        document.getElementById("numeroMostrado").innerText = num;
+        if (num === ganador) {
+          mostrarResultado(`¡Ganaste ${nombre}! Enviá captura por Instagram 🚀`);
+          lanzarConfeti();
+          document.getElementById("btnAleatorio").disabled = true;
+          document.getElementById("btnManual").disabled = true;
+          document.getElementById("contadorOportunidades").style.display = "none";
+        } else {
+          oportunidadesRestantes--;
+          maxIntentosManual--;
+          actualizarOportunidades();
+          if (oportunidadesRestantes > 0) {
+            mostrarResultado(`No ganaste ${nombre}, seguí participando 😢`);
+          }
+          verificarFinJuego();
+        }
+
+        jugadoresPrevios++;
+        localStorage.setItem("jugadoresPrevios", jugadoresPrevios);
+        document.getElementById("contadorJugadores").innerText = `${jugadoresPrevios} personas ya participaron 👥`;
+      }, 3000);
+    }
+
+    function lanzarConfeti() {
+      const duration = 2 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        confetti(Object.assign({}, defaults, {
+          particleCount: 50,
+          origin: {
+            x: randomInRange(0.1, 0.3),
+            y: Math.random() - 0.2
+          }
+        }));
+        confetti(Object.assign({}, defaults, {
+          particleCount: 50,
+          origin: {
+            x: randomInRange(0.7, 0.9),
+            y: Math.random() - 0.2
+          }
+        }));
+      }, 250);
+    }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </body>
 </html>
